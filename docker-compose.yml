@@ -1,0 +1,23 @@
+services:
+  firewall:
+    build: .
+    environment:
+      # Inside the container, the macvlan network will appear with a default interface name;
+      # you can verify and then set WAN_IF accordingly. Here we assume it appears as "eth0".
+      WAN_IF: "eth0"
+      # Define forwarding rules as a space-separated list
+      # e.g. forward inbound TCP port 443 to 192.168.1.100:443 and UDP port 53 to 192.168.1.101:53.
+      FORWARD_RULES: "tcp:443:192.168.1.100:443 udp:53:192.168.1.101:53"
+      # Define which source networks should receive ICMP echo responses
+      ICMP_ALLOW: "192.168.1.0/24 10.0.0.0/8"
+    cap_add:
+      - NET_ADMIN
+    networks:
+      wan_macvlan: {}
+    restart: unless-stopped
+
+networks:
+  wan_macvlan:
+    driver: macvlan
+    driver_opts:
+      parent: eth1   # The dedicated physical WAN NIC on the host
